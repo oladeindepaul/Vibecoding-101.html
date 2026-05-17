@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CohortFlow Infrastructure Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,700;1,500;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a0f1e;
+    --navy-2: #111827;
+    --navy-3: #1a2540;
+    --navy-4: #1e2d4a;
+    --slate: #2d3d5a;
+    --slate-light: #3d5175;
+    --emerald: #10b981;
+    --emerald-dark: #059669;
+    --emerald-glow: rgba(16,185,129,0.15);
+    --gold: #f59e0b;
+    --gold-light: #fbbf24;
+    --white: #f8fafc;
+    --white-dim: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-body: #cbd5e1;
+    --border: rgba(255,255,255,0.08);
+    --border-active: rgba(16,185,129,0.4);
+    --card: rgba(255,255,255,0.04);
+    --card-hover: rgba(255,255,255,0.07);
+    --radius: 12px;
+    --radius-lg: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── BACKGROUND ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(16,185,129,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(30,45,74,0.6) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,15,30,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header-logo {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--emerald) 0%, #06b6d4 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    letter-spacing: -0.5px;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--white-dim);
+    letter-spacing: 0.03em;
+  }
+
+  .header-title span {
+    color: var(--emerald);
+  }
+
+  .header-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--emerald-glow);
+    border: 1px solid var(--border-active);
+    color: var(--emerald);
+    letter-spacing: 0.05em;
+  }
+
+  .header-badge::before {
+    content: '● ';
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── LAYOUT ─── */
+  .app-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 40px 64px;
+  }
+
+  /* ─── TABS ─── */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    width: fit-content;
+  }
+
+  .tab-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--white-dim); background: rgba(255,255,255,0.04); }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--emerald-dark) 0%, #0d9488 100%);
+    color: white;
+    box-shadow: 0 2px 12px rgba(16,185,129,0.3);
+  }
+
+  /* ─── SECTION PANEL ─── */
+  .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+  .tab-panel.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    margin-bottom: 28px;
+  }
+
+  .section-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--emerald);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.6;
+    max-width: 560px;
+  }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    backdrop-filter: blur(8px);
+  }
+
+  /* ─── FORM ─── */
+  .form-grid { display: grid; gap: 20px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 7px; }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .form-control {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    transition: all 0.2s;
+    outline: none;
+    width: 100%;
+  }
+
+  .form-control::placeholder { color: rgba(148,163,184,0.5); }
+
+  .form-control:focus {
+    border-color: var(--emerald);
+    background: rgba(16,185,129,0.05);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+  }
+
+  .form-control option {
+    background: var(--navy-2);
+    color: var(--white);
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--emerald) 0%, #0d9488 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+    width: 100%;
+    margin-top: 8px;
+    box-shadow: 0 4px 20px rgba(16,185,129,0.25);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(16,185,129,0.35);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.06);
+    color: var(--white-dim);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,10,20,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal-box {
+    background: var(--navy-2);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 36px;
+    width: 460px;
+    max-width: 95vw;
+    transform: scale(0.95) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  }
+
+  .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-logo-ps {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #00c3f7 0%, #0066ff 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    color: white;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .modal-brand-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .modal-brand-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .modal-close {
+    background: rgba(255,255,255,0.06);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.12); color: white; }
+
+  .modal-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .modal-amount-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(16,185,129,0.07);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  .modal-amount-label { font-size: 13px; color: var(--text-muted); }
+
+  .modal-amount-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--emerald);
+  }
+
+  .modal-fields { display: grid; gap: 14px; margin-bottom: 20px; }
+
+  .modal-field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+
+  .modal-field-icon { font-size: 16px; }
+  .modal-field-text { font-size: 13px; color: var(--text-body); }
+
+  .btn-pay {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #00c3f7 0%, #0066ff 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(0,102,255,0.35);
+  }
+
+  .btn-pay:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,102,255,0.45); }
+
+  .modal-secure {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ─── SUCCESS CARD ─── */
+  .success-card {
+    display: none;
+    background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(6,182,212,0.07) 100%);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    animation: successIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    margin-top: 24px;
+  }
+
+  @keyframes successIn {
+    from { opacity: 0; transform: scale(0.95) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .success-card.visible { display: block; }
+
+  .success-headline {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .success-headline .track-name {
+    color: var(--emerald);
+    font-style: italic;
+  }
+
+  .success-headline .student-name {
+    color: var(--gold-light);
+  }
+
+  .alert-box {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-left: 3px solid var(--emerald);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 16px;
+  }
+
+  .alert-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--emerald);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .alert-text {
+    font-size: 13px;
+    color: var(--text-body);
+    line-height: 1.65;
+  }
+
+  /* ─── CERTIFICATE SECTION ─── */
+  .cert-input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    max-width: 560px;
+    margin-bottom: 32px;
+  }
+
+  .cert-input-row .form-group { flex: 1; margin: 0; }
+
+  .btn-generate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--emerald) 0%, #0d9488 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(16,185,129,0.25);
+    flex-shrink: 0;
+  }
+
+  .btn-generate:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(16,185,129,0.35); }
+
+  /* ─── CERTIFICATE ─── */
+  .cert-wrapper {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .cert-wrapper.visible { display: block; }
+
+  .certificate {
+    background: linear-gradient(160deg, #0d1f3c 0%, #0a1628 60%, #0d2040 100%);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    padding: 52px 64px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 3px rgba(245,158,11,0.3);
+    margin-bottom: 24px;
+  }
+
+  .certificate::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 10px;
+    pointer-events: none;
+  }
+
+  .certificate::after {
+    content: '';
+    position: absolute;
+    inset: 12px;
+    border: 1px solid rgba(245,158,11,0.1);
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  .cert-corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-color: var(--gold);
+    border-style: solid;
+    opacity: 0.6;
+  }
+
+  .cert-corner-tl { top: 18px; left: 18px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+  .cert-corner-tr { top: 18px; right: 18px; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+  .cert-corner-bl { bottom: 18px; left: 18px; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+  .cert-corner-br { bottom: 18px; right: 18px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+  .cert-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 200px;
+    opacity: 0.025;
+    pointer-events: none;
+    font-family: 'DM Mono', monospace;
+    font-weight: 700;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .cert-seal {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 20px;
+    background: radial-gradient(circle, rgba(245,158,11,0.2) 0%, transparent 70%);
+    border: 2px solid rgba(245,158,11,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(245,158,11,0.15), inset 0 0 20px rgba(245,158,11,0.05);
+  }
+
+  .cert-seal::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 1px dashed rgba(245,158,11,0.3);
+    border-radius: 50%;
+  }
+
+  .cert-org {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: rgba(245,158,11,0.7);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .cert-title-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: rgba(203,213,225,0.7);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .cert-subtitle {
+    font-size: 12px;
+    color: rgba(148,163,184,0.6);
+    margin-bottom: 24px;
+  }
+
+  .cert-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 46px;
+    font-style: italic;
+    font-weight: 500;
+    color: #fef3c7;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    text-shadow: 0 2px 20px rgba(245,158,11,0.3);
+    letter-spacing: 0.02em;
+  }
+
+  .cert-divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,158,11,0.5), transparent);
+    margin: 16px auto;
+  }
+
+  .cert-body-text {
+    font-size: 13px;
+    color: rgba(203,213,225,0.7);
+    line-height: 1.7;
+    max-width: 420px;
+    margin: 0 auto 20px;
+  }
+
+  .cert-track-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--emerald);
+    letter-spacing: 0.03em;
+  }
+
+  .cert-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 20px;
+  }
+
+  .cert-meta-item {
+    text-align: center;
+  }
+
+  .cert-meta-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: rgba(148,163,184,0.5);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .cert-meta-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(245,158,11,0.7);
+  }
+
+  .cert-meta-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(245,158,11,0.2);
+  }
+
+  .cert-confirmation {
+    background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+
+  .cert-confirmation-text {
+    font-size: 13px;
+    color: var(--text-body);
+    line-height: 1.6;
+  }
+
+  .cert-confirmation-text strong {
+    color: var(--emerald);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+
+  .cert-actions { display: flex; gap: 12px; }
+
+  /* ─── AUDIT LOG ─── */
+  .terminal {
+    background: #050a0f;
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .terminal-bar {
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .terminal-dots { display: flex; gap: 6px; }
+
+  .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #ffbd2e; }
+  .dot-green { background: #28c840; }
+
+  .terminal-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    flex: 1;
+    text-align: center;
+  }
+
+  .terminal-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(16,185,129,0.12);
+    color: var(--emerald);
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .terminal-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .log-line {
+    display: block;
+    color: var(--emerald);
+    opacity: 0;
+    transform: translateX(-8px);
+    animation: logIn 0.3s ease forwards;
+    margin-bottom: 2px;
+  }
+
+  @keyframes logIn {
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .log-ts { color: rgba(16,185,129,0.5); }
+  .log-dim { color: rgba(148,163,184,0.4); }
+  .log-info { color: #60a5fa; }
+  .log-warn { color: var(--gold); }
+  .log-boot { color: rgba(148,163,184,0.5); }
+
+  .terminal-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: rgba(148,163,184,0.2);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 60px;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .terminal-empty-icon { font-size: 32px; opacity: 0.4; }
+
+  /* ─── MISC ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .app-shell { padding: 24px 20px 48px; }
+    header { padding: 0 20px; }
+    .two-col { grid-template-columns: 1fr; }
+    .cert-input-row { flex-direction: column; }
+    .cert-input-row .btn-generate { width: 100%; }
+    .cert-name { font-size: 32px; }
+    .certificate { padding: 36px 28px; }
+    .cert-meta-row { gap: 16px; }
+    .tab-nav { overflow-x: auto; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <div class="header-logo">CF</div>
+    <div>
+      <div class="header-title">CohortFlow Infrastructure Engine <span>//</span> Sandbox: Apex Tech Academy</div>
+    </div>
+  </div>
+  <div class="header-badge">Live Sandbox</div>
+</header>
+
+<!-- MAIN -->
+<main class="app-shell">
+
+  <!-- TABS -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('enrollment', this)">01 — Student Enrollment</button>
+    <button class="tab-btn" onclick="switchTab('credentials', this)">02 — Credentials Generator</button>
+    <button class="tab-btn" onclick="switchTab('audit', this)">03 — Ops Audit Log</button>
+  </nav>
+
+  <!-- TAB 1: ENROLLMENT -->
+  <div class="tab-panel active" id="tab-enrollment">
+    <div class="section-header">
+      <div class="section-eyebrow">Onboarding Engine // Cohort Intake</div>
+      <div class="section-title">Apex Tech Academy — Flagship Cohort Intake</div>
+      <div class="section-desc">Secure student registration portal with automated Paystack gateway simulation and downstream Airtable sync.</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="card">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Legal Name</label>
+              <input type="text" id="student-name" class="form-control" placeholder="e.g. Adaeze Okonkwo">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Active Email Address</label>
+              <input type="email" id="student-email" class="form-control" placeholder="e.g. adaeze@email.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Selected Training Track</label>
+              <select id="student-track" class="form-control">
+                <option value="" disabled selected>— Choose a training track —</option>
+                <option value="Virtual Assistant (VA) Operations">Virtual Assistant (VA) Operations</option>
+                <option value="Front-End Development (FE)">Front-End Development (FE)</option>
+                <option value="Back-End Development (BE)">Back-End Development (BE)</option>
+                <option value="Data Analytics Intensive (DA)">Data Analytics Intensive (DA)</option>
+                <option value="Sales & Marketing Execution">Sales &amp; Marketing Execution</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="openPaymentModal()">
+              <span>🔒</span> Proceed to Secure Checkout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUCCESS CARD -->
+      <div>
+        <div class="success-card" id="success-card">
+          <div style="font-size:32px;margin-bottom:12px;">🎉</div>
+          <div class="success-headline">
+            Payment Verified! Welcome to the <span class="track-name" id="success-track"></span> Cohort, <span class="student-name" id="success-name"></span>.
+          </div>
+          <div class="alert-box">
+            <div class="alert-label">⚡ System Status</div>
+            <div class="alert-text" id="alert-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: CREDENTIALS -->
+  <div class="tab-panel" id="tab-credentials">
+    <div class="section-header">
+      <div class="section-eyebrow">End-of-Program Engine // Verification</div>
+      <div class="section-title">Alumni Graduation Verification Platform</div>
+      <div class="section-desc">Demonstrating CohortFlow's automated API dynamic canvas overlay engine used at the close of an academy's program lifecycle.</div>
+    </div>
+
+    <div style="max-width:560px;margin-bottom:32px;">
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-group">
+          <label class="form-label">Graduate Full Name</label>
+          <input type="text" id="grad-name" class="form-control" placeholder="e.g. Emeka Chukwuemeka">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Training Track</label>
+          <select id="grad-track" class="form-control">
+            <option value="" disabled selected>— Select track —</option>
+            <option value="Virtual Assistant (VA) Operations">Virtual Assistant (VA) Operations</option>
+            <option value="Front-End Development (FE)">Front-End Development (FE)</option>
+            <option value="Back-End Development (BE)">Back-End Development (BE)</option>
+            <option value="Data Analytics Intensive (DA)">Data Analytics Intensive (DA)</option>
+            <option value="Sales &amp; Marketing Execution">Sales &amp; Marketing Execution</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-generate" style="width:100%;" onclick="generateCertificate()">
+        <span>🎓</span> Generate &amp; Dispatch Verified Certificate
+      </button>
+    </div>
+
+    <div class="cert-wrapper" id="cert-wrapper">
+      <div class="certificate" id="certificate">
+        <div class="cert-watermark">✦</div>
+        <div class="cert-corner cert-corner-tl"></div>
+        <div class="cert-corner cert-corner-tr"></div>
+        <div class="cert-corner cert-corner-bl"></div>
+        <div class="cert-corner cert-corner-br"></div>
+
+        <div class="cert-seal">🏅</div>
+        <div class="cert-org">Apex Tech Academy · CohortFlow Certified</div>
+        <div class="cert-title-text">Certificate of Completion</div>
+        <div class="cert-subtitle">This is to certify that the following graduate has successfully completed all program requirements</div>
+
+        <div class="cert-divider"></div>
+        <div class="cert-name" id="cert-name-display"></div>
+        <div class="cert-divider"></div>
+
+        <div class="cert-body-text">
+          has completed the full curriculum of the<br>
+          <span class="cert-track-name" id="cert-track-display">Apex Tech Academy Professional Development Program</span><br>
+          and is hereby awarded this verified credential.
+        </div>
+
+        <div class="cert-meta-row">
+          <div class="cert-meta-item">
+            <div class="cert-meta-label">Certificate ID</div>
+            <div class="cert-meta-value" id="cert-id"></div>
+          </div>
+          <div class="cert-meta-divider"></div>
+          <div class="cert-meta-item">
+            <div class="cert-meta-label">Issue Date</div>
+            <div class="cert-meta-value" id="cert-date"></div>
+          </div>
+          <div class="cert-meta-divider"></div>
+          <div class="cert-meta-item">
+            <div class="cert-meta-label">Issued By</div>
+            <div class="cert-meta-value">COHORTFLOW ENGINE</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cert-confirmation">
+        <div class="cert-confirmation-text">
+          <strong>PROCESSING COMPLETE —</strong> High-resolution verified credential asset generated via canvas API and offloaded to automated distribution nodes. Credential indexed under ID: <strong id="cert-id-confirm"></strong>
+        </div>
+      </div>
+
+      <div class="cert-actions">
+        <button class="btn-primary" style="max-width:260px;margin-top:0;" onclick="downloadCertificate()">
+          <span>⬇️</span> Download Certificate Asset
+        </button>
+        <button class="btn-secondary" onclick="resetCertificate()">Generate Another</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: AUDIT LOG -->
+  <div class="tab-panel" id="tab-audit">
+    <div class="section-header">
+      <div class="section-eyebrow">Infrastructure Monitoring // Live Feed</div>
+      <div class="section-title">Operations Audit Log</div>
+      <div class="section-desc">Real-time simulated webhook stream showing underlying infrastructure events triggered by platform activity.</div>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="terminal-dots">
+          <div class="terminal-dot dot-red"></div>
+          <div class="terminal-dot dot-yellow"></div>
+          <div class="terminal-dot dot-green"></div>
+        </div>
+        <div class="terminal-title">System Log (Simulated Live Webhooks) — CohortFlow v2.4.1</div>
+        <div class="terminal-badge" id="log-status">IDLE</div>
+      </div>
+      <div class="terminal-body" id="terminal-body">
+        <div class="terminal-empty" id="terminal-empty">
+          <div class="terminal-empty-icon">⬛</div>
+          <div>Awaiting platform activity...</div>
+          <div style="opacity:0.5;font-size:11px;">Perform actions in Tab 01 or Tab 02 to stream logs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-brand">
+        <div class="modal-logo-ps">PS</div>
+        <div>
+          <div class="modal-brand-name">Paystack · Secure Checkout</div>
+          <div class="modal-brand-sub">payments.paystack.com · SSL Encrypted</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closePaymentModal()">✕</button>
+    </div>
+
+    <div class="modal-amount-row">
+      <div>
+        <div class="modal-amount-label">Transaction Total</div>
+        <div style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;margin-top:2px;">Apex Tech Academy Enrollment Fee</div>
+      </div>
+      <div class="modal-amount-value">₦150,000</div>
+    </div>
+
+    <div class="modal-fields">
+      <div class="modal-field-row">
+        <span class="modal-field-icon">👤</span>
+        <span class="modal-field-text" id="modal-name-display">—</span>
+      </div>
+      <div class="modal-field-row">
+        <span class="modal-field-icon">📧</span>
+        <span class="modal-field-text" id="modal-email-display">—</span>
+      </div>
+      <div class="modal-field-row">
+        <span class="modal-field-icon">🎯</span>
+        <span class="modal-field-text" id="modal-track-display">—</span>
+      </div>
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <button class="btn-pay" onclick="simulatePayment()">
+      ✅ &nbsp; Simulate Successful Payment
+    </button>
+
+    <div class="modal-secure">🔐 &nbsp; Encrypted via TLS 1.3 · Powered by Paystack</div>
+  </div>
+</div>
+
+<script>
+// ─── TAB SWITCHING ───
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── UTILS ───
+function now() {
+  const d = new Date();
+  return d.toISOString().replace('T', ' ').substring(0, 19);
+}
+
+function randomHex(n) {
+  return [...Array(n)].map(() => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+}
+
+function randomId() {
+  return 'rec' + randomHex(7).toLowerCase();
+}
+
+// ─── TERMINAL ───
+let logCount = 0;
+
+function addLog(text, type = 'default') {
+  const body = document.getElementById('terminal-body');
+  const empty = document.getElementById('terminal-empty');
+  const status = document.getElementById('log-status');
+
+  if (empty) empty.style.display = 'none';
+  status.textContent = 'ACTIVE';
+  status.style.color = 'var(--emerald)';
+
+  logCount++;
+  const line = document.createElement('span');
+  line.className = 'log-line';
+  line.style.animationDelay = (logCount * 0.05) + 's';
+
+  if (type === 'info') line.classList.add('log-info');
+  if (type === 'warn') line.classList.add('log-warn');
+  if (type === 'boot') line.classList.add('log-boot');
+
+  line.innerHTML = `<span class="log-ts">[${now()}]</span> ${text}`;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+  logCount = 0;
+}
+
+function addLogDelayed(text, delay, type) {
+  setTimeout(() => addLog(text, type), delay);
+}
+
+// ─── ENROLLMENT ───
+function openPaymentModal() {
+  const name = document.getElementById('student-name').value.trim();
+  const email = document.getElementById('student-email').value.trim();
+  const track = document.getElementById('student-track').value;
+
+  if (!name || !email || !track) {
+    alert('Please fill in all fields before proceeding to checkout.');
+    return;
+  }
+
+  document.getElementById('modal-name-display').textContent = name;
+  document.getElementById('modal-email-display').textContent = email;
+  document.getElementById('modal-track-display').textContent = track;
+  document.getElementById('payment-modal').classList.add('open');
+
+  addLog(`🔒 CHECKOUT: Gateway session opened for <strong>${name}</strong>`, 'info');
+  addLogDelayed(`📋 FORM: Validated fields — Name, Email, Track [${track}]`, 150, 'boot');
+}
+
+function closePaymentModal() {
+  document.getElementById('payment-modal').classList.remove('open');
+  addLog('❌ CHECKOUT: Session dismissed by user — no transaction processed.', 'warn');
+}
+
+function simulatePayment() {
+  const name = document.getElementById('student-name').value.trim();
+  const email = document.getElementById('student-email').value.trim();
+  const track = document.getElementById('student-track').value;
+  const recId = randomId();
+  const txRef = 'TXN-APX-' + randomHex(8);
+
+  document.getElementById('payment-modal').classList.remove('open');
+
+  // Populate success card
+  document.getElementById('success-track').textContent = track;
+  document.getElementById('success-name').textContent = name;
+  document.getElementById('alert-text').innerHTML =
+    `Core data successfully pushed to Airtable Master Database. A personalized registration receipt has been sent to <strong>${email}</strong>. To maximize retention and prevent early-stage platform churn, a strict <strong>2-Day Operational Delay</strong> has been locked onto this user record before the automated Slack Workspace Invitation link is released to their inbox.`;
+
+  const card = document.getElementById('success-card');
+  card.classList.remove('visible');
+  void card.offsetWidth;
+  card.classList.add('visible');
+
+  // Reset form
+  document.getElementById('student-name').value = '';
+  document.getElementById('student-email').value = '';
+  document.getElementById('student-track').value = '';
+
+  // Pre-fill credentials tab with enrolled track
+  const gradTrack = document.getElementById('grad-track');
+  for (let i = 0; i < gradTrack.options.length; i++) {
+    if (gradTrack.options[i].value === track) { gradTrack.selectedIndex = i; break; }
+  }
+
+  // Logs
+  addLog(`⚡ TRIGGER: Payment confirmed for <strong>${name}</strong> on <strong>${track}</strong> Track.`);
+  addLogDelayed(`💳 GATEWAY: Paystack ref <span style="color:var(--gold)">${txRef}</span> — ₦150,000 authorized.`, 300);
+  addLogDelayed(`⚙️ ACTION: Syncing fields to Airtable Base row ID: <span style="color:var(--gold)">${recId}</span>`, 700);
+  addLogDelayed(`✅ AIRTABLE: Write confirmed — Name, Email, Track, Timestamp, TxRef stored.`, 1200, 'info');
+  addLogDelayed(`⏳ DELAY: 48-Hour hold applied before Slack link deployment to prevent churn.`, 2500, 'warn');
+  addLogDelayed(`🔒 RECORD: User record locked with deployment_gate: PENDING_48H_HOLD`, 3000, 'warn');
+
+  sendEnrollmentEmail(name, email, track, txRef);
+}
+
+// ─── CREDENTIALS ───
+function generateCertificate() {
+  const name = document.getElementById('grad-name').value.trim();
+  const track = document.getElementById('grad-track').value;
+  if (!name) { alert('Please enter the graduate\'s full name.'); return; }
+  if (!track) { alert('Please select a training track.'); return; }
+
+  const certId = 'CF-APX-2026-' + randomHex(5);
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  document.getElementById('cert-name-display').textContent = name;
+  document.getElementById('cert-track-display').textContent = track;
+  document.getElementById('cert-id').textContent = certId;
+  document.getElementById('cert-date').textContent = today;
+  document.getElementById('cert-id-confirm').textContent = certId;
+
+  const wrapper = document.getElementById('cert-wrapper');
+  wrapper.classList.remove('visible');
+  void wrapper.offsetWidth;
+  wrapper.classList.add('visible');
+
+  // Logs
+  addLog(`🎓 CREDENTIALS: Canvas API overlay executed for <strong>${name}</strong> — Track: <strong>${track}</strong>.`);
+  addLogDelayed(`🆔 CERT-ID: Unique identifier assigned — <span style="color:var(--gold)">${certId}</span>`, 400);
+  addLogDelayed(`🖨️ RENDER: High-resolution certificate asset generated at 300dpi.`, 800, 'info');
+  addLogDelayed(`📦 OUTPUT: Asset routed to automated distribution node queue.`, 1300, 'info');
+  addLogDelayed(`✅ DISPATCH: Credential delivery confirmed — record indexed in verification registry.`, 1800);
+}
+
+function resetCertificate() {
+  document.getElementById('cert-wrapper').classList.remove('visible');
+  document.getElementById('grad-name').value = '';
+  document.getElementById('grad-track').value = '';
+}
+
+function downloadCertificate() {
+  const name = document.getElementById('cert-name-display').textContent || 'Graduate';
+  const track = document.getElementById('cert-track-display').textContent || 'Professional Development Program';
+  const certId = document.getElementById('cert-id').textContent;
+  const certDate = document.getElementById('cert-date').textContent;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 800;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const bg = ctx.createLinearGradient(0, 0, 1200, 800);
+  bg.addColorStop(0, '#0d1f3c');
+  bg.addColorStop(0.6, '#0a1628');
+  bg.addColorStop(1, '#0d2040');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 1200, 800);
+
+  // Outer border
+  ctx.strokeStyle = 'rgba(245,158,11,0.5)';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(20, 20, 1160, 760);
+
+  // Inner border
+  ctx.strokeStyle = 'rgba(245,158,11,0.2)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(36, 36, 1128, 728);
+
+  // Seal circle
+  ctx.beginPath();
+  ctx.arc(600, 120, 44, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(245,158,11,0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.font = '44px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏅', 600, 135);
+
+  // Org text
+  ctx.font = '500 14px monospace';
+  ctx.fillStyle = 'rgba(245,158,11,0.75)';
+  ctx.letterSpacing = '6px';
+  ctx.fillText('APEX TECH ACADEMY · COHORTFLOW CERTIFIED', 600, 195);
+
+  // Title
+  ctx.font = '500 18px monospace';
+  ctx.fillStyle = 'rgba(203,213,225,0.7)';
+  ctx.fillText('CERTIFICATE OF COMPLETION', 600, 240);
+
+  // Divider
+  ctx.beginPath();
+  const grad = ctx.createLinearGradient(440, 0, 760, 0);
+  grad.addColorStop(0, 'transparent');
+  grad.addColorStop(0.5, 'rgba(245,158,11,0.6)');
+  grad.addColorStop(1, 'transparent');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1;
+  ctx.moveTo(440, 268); ctx.lineTo(760, 268);
+  ctx.stroke();
+
+  // Name
+  ctx.font = 'italic 64px Georgia, serif';
+  ctx.fillStyle = '#fef3c7';
+  ctx.shadowColor = 'rgba(245,158,11,0.4)';
+  ctx.shadowBlur = 20;
+  ctx.fillText(name, 600, 370);
+  ctx.shadowBlur = 0;
+
+  // Divider 2
+  ctx.beginPath();
+  ctx.moveTo(440, 405); ctx.lineTo(760, 405);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Body text
+  ctx.font = '300 16px Georgia, serif';
+  ctx.fillStyle = 'rgba(203,213,225,0.7)';
+  ctx.fillText('has completed the full curriculum of the', 600, 450);
+  ctx.font = 'bold 18px Georgia, serif';
+  ctx.fillStyle = '#10b981';
+  ctx.fillText(track, 600, 485);
+  ctx.font = '300 16px Georgia, serif';
+  ctx.fillStyle = 'rgba(203,213,225,0.7)';
+  ctx.fillText('and is hereby awarded this verified credential.', 600, 520);
+
+  // Meta
+  const metaY = 610;
+  ctx.font = '500 12px monospace';
+  ctx.fillStyle = 'rgba(148,163,184,0.5)';
+  ctx.fillText('CERTIFICATE ID', 380, metaY);
+  ctx.fillText('ISSUE DATE', 600, metaY);
+  ctx.fillText('ISSUED BY', 820, metaY);
+
+  ctx.font = '500 14px monospace';
+  ctx.fillStyle = 'rgba(245,158,11,0.8)';
+  ctx.fillText(certId, 380, metaY + 24);
+  ctx.fillText(certDate, 600, metaY + 24);
+  ctx.fillText('COHORTFLOW ENGINE', 820, metaY + 24);
+
+  // Download
+  const link = document.createElement('a');
+  link.download = `CohortFlow_Certificate_${name.replace(/\s+/g,'_')}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+
+  addLog(`⬇️ DOWNLOAD: Certificate asset exported for <strong>${name}</strong> — <span style="color:var(--gold)">${certId}</span>`, 'info');
+}
+
+// ─── EMAILJS CONFIG — replace these three values with yours ───
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // Account > API Keys
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // Email Services tab
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // Email Templates tab
+
+// Uses the EmailJS REST API directly — works from file:// and any hosted environment
+async function sendEnrollmentEmail(name, email, track, txRef) {
+  const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  addLogDelayed(`📤 EMAILJS: Dispatching confirmation to <span style="color:var(--gold)">${email}</span>...`, 1700, 'info');
+
+  try {
+    const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id:  EMAILJS_SERVICE_ID,
+        template_id: EMAILJS_TEMPLATE_ID,
+        user_id:     EMAILJS_PUBLIC_KEY,
+        template_params: { name, email, track, tx_ref: txRef, date }
+      })
+    });
+
+    if (res.ok) {
+      addLogDelayed(`✅ EMAIL: Delivery confirmed — receipt sent to <span style="color:var(--gold)">${email}</span>`, 2000, 'info');
+    } else {
+      const errText = await res.text();
+      addLogDelayed(`⚠️ EMAIL: Dispatch failed — ${errText}`, 2000, 'warn');
+    }
+  } catch (err) {
+    addLogDelayed(`⚠️ EMAIL: Network error — ${err.message}`, 2000, 'warn');
+  }
+}
+
+// ─── BOOT LOGS ───
+window.addEventListener('load', () => {
+  addLog(`🚀 BOOT: CohortFlow Infrastructure Engine v2.4.1 initialized.`, 'boot');
+  addLogDelayed(`🔌 CONNECT: Sandbox environment linked to Apex Tech Academy.`, 300, 'boot');
+  addLogDelayed(`✅ STATUS: All services nominal. Awaiting intake events.`, 600, 'boot');
+  addLogDelayed(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 900, 'dim');
+});
+</script>
+</body>
+</html>
